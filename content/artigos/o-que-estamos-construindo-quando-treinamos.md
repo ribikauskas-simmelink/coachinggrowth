@@ -6,7 +6,7 @@ author: Henrique Scomparim
 summary: |-
   Corrida, triathlon, musculação, Hyrox, treinamento funcional e CrossFit como
   diferentes caminhos para a saúde
-cover: /uploads/fullsizerender_vsco.jpg
+cover: /uploads/screenshot-2026-10-08-at-21.46.05.png
 pdf:
   require_phone: true
   file: /uploads/o-que-estamos-construindo-quando-treinamos.pdf
