@@ -40,6 +40,13 @@ function readingTime(text) {
   return Math.max(1, Math.round(words / 200));
 }
 
+// O título já aparece no topo da página; se o texto repete o título como
+// "# Título" na primeira linha, essa linha é removida.
+function stripTitle(md, title) {
+  const norm = (t) => String(t || '').replace(/[*_`#]/g, '').trim().toLowerCase();
+  return md.replace(/^\s*#\s+(.+)\n/, (line, h) => (norm(h) === norm(title) ? '' : line));
+}
+
 function loadArticles() {
   if (!fs.existsSync(ARTICLES_DIR)) return [];
   return fs.readdirSync(ARTICLES_DIR)
@@ -60,7 +67,7 @@ function loadArticles() {
         cover: data.cover || '',
         gallery: (data.gallery || []).filter((g) => g && g.image),
         pdf,
-        html: marked.parse(content || ''),
+        html: marked.parse(stripTitle(content || '', data.title)),
         minutes: readingTime(content || ''),
       };
     })
