@@ -102,7 +102,7 @@ const NAV = `<nav class="cg-nav is-visible">
       <a class="cg-navlink" href="/#services">Serviços</a>
       <a class="cg-navlink" href="/#course">Curso</a>
       <a class="cg-navlink" href="/#time">Time</a>
-      <a class="cg-navlink" href="/artigos/">Conteúdo</a>
+      <a class="cg-navlink" href="/artigos/">Artigos</a>
       <a class="cg-btn cg-btn--sm" href="${WHATSAPP}" target="_blank" rel="noopener">WhatsApp</a>
     </div>
   </div>
