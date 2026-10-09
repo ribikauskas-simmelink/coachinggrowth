@@ -20,7 +20,7 @@ section[id]{scroll-margin-top:57px}
 /* ── Boneco divider ──
    Upside down until the section is well in view; then waits a moment
    and turns slowly so the rotation is easy to see. */
-.cg-boneco-img{width:64px;height:auto;display:block;transform-origin:50% 68%;transform:rotate(180deg);transition:transform .3s ease}
+.cg-boneco-img{width:64px;height:auto;display:block;transform-origin:50% 50%;transform:rotate(180deg);transition:transform .3s ease}
 .cg-boneco.is-in .cg-boneco-img{transform:rotate(0deg);transition:transform 1.8s cubic-bezier(.34,1.25,.64,1) 1s}
 .cg-boneco-line{flex:1;height:1px;background:rgba(0,0,0,.35);transform:scaleX(0);transition:transform 1s cubic-bezier(.16,1,.3,1)}
 .cg-boneco-line--left{transform-origin:right}
