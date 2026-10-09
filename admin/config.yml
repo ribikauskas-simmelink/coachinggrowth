@@ -1,0 +1,71 @@
+# Painel de artigos (Decap CMS) — acessível em /admin
+backend:
+  name: git-gateway
+  branch: main
+  commit_messages:
+    create: 'Novo artigo: {{slug}}'
+    update: 'Edita artigo: {{slug}}'
+    delete: 'Remove artigo: {{slug}}'
+    uploadMedia: 'Envia arquivo: {{path}}'
+    deleteMedia: 'Remove arquivo: {{path}}'
+
+locale: pt
+site_url: /
+display_url: /
+logo_url: /assets/logo-full.png
+
+# Fotos e PDFs enviados pelo painel ficam em /uploads
+media_folder: uploads
+public_folder: /uploads
+
+slug:
+  encoding: ascii
+  clean_accents: true
+  sanitize_replacement: '-'
+
+collections:
+  - name: artigos
+    label: Artigos
+    label_singular: Artigo
+    description: Os artigos aparecem na seção "Conteúdo" do site e em /artigos.
+    folder: content/artigos
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    format: frontmatter
+    summary: '{{title}} · {{date | date("DD/MM/YYYY")}}'
+    sortable_fields: ['date', 'title', 'category']
+    preview_path: 'artigos/{{slug}}/'
+    fields:
+      - { name: title, label: Título, widget: string }
+      - { name: date, label: Data de publicação, widget: datetime, date_format: 'DD/MM/YYYY', time_format: false, format: 'YYYY-MM-DD' }
+      - name: category
+        label: Categoria
+        widget: select
+        options: [Metodologia, Ensino, Mentalidade, Ginástica, Carreira]
+      - { name: author, label: Autor, widget: string, default: Henrique Scomparim, required: false }
+      - { name: summary, label: Resumo, widget: text, hint: 'Duas ou três frases. Aparece no card do artigo e no Google.' }
+      - { name: cover, label: Foto de capa, widget: image, required: false }
+      - { name: body, label: Texto, widget: markdown, hint: 'Dá para inserir fotos no meio do texto pelo botão "+".' }
+      - name: gallery
+        label: Fotos complementares
+        label_singular: foto
+        widget: list
+        required: false
+        collapsed: false
+        summary: '{{fields.caption}}'
+        hint: 'Aparecem em galeria no final do artigo.'
+        fields:
+          - { name: image, label: Foto, widget: image }
+          - { name: caption, label: Legenda, widget: string, required: false }
+      - name: pdf
+        label: PDF para download
+        widget: object
+        required: false
+        collapsed: true
+        hint: 'Opcional. Deixe vazio se o artigo não tiver material para baixar.'
+        fields:
+          - { name: file, label: Arquivo PDF, widget: file, required: false, media_library: { config: { multiple: false } } }
+          - { name: title, label: Nome do material, widget: string, required: false, hint: 'Ex.: Guia de progressões de ginástica' }
+          - { name: description, label: Descrição curta, widget: text, required: false }
+          - { name: require_phone, label: Pedir telefone antes do download, widget: boolean, default: true }

@@ -119,3 +119,13 @@
   }
   select(0);
 })();
+
+// Netlify Identity: invite / password-recovery links land on the home page;
+// after logging in, send the editor to the CMS.
+if (window.netlifyIdentity) {
+  window.netlifyIdentity.on('init', function (user) {
+    if (!user) {
+      window.netlifyIdentity.on('login', function () { document.location.href = '/admin/'; });
+    }
+  });
+}
