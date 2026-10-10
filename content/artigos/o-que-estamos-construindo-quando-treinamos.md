@@ -2,7 +2,7 @@
 title: O que estamos construindo quando treinamos?
 date: 2026-10-08
 category: Metodologia
-author: Henrique Scomparim
+author: Henrique Xavier Scomparin, CF-L3
 summary: |-
   Corrida, triathlon, musculação, Hyrox, treinamento funcional e CrossFit como
   diferentes caminhos para a saúde
@@ -11,14 +11,6 @@ pdf:
   require_phone: true
   file: /uploads/o-que-estamos-construindo-quando-treinamos.pdf
 ---
-# O que estamos construindo quando treinamos?
-
-*Corrida, triathlon, musculação, Hyrox, treinamento funcional e CrossFit como diferentes caminhos para a saúde*
-
-**Por Henrique Xavier Scomparin, CF-L3**
-
----
-
 ## Existe uma única forma de ser saudável?
 
 CrossFit, corrida, musculação, Hyrox ou triathlon: qual modalidade é melhor? A resposta mais honesta talvez seja: depende. Depende do que você procura, daquilo de que gosta, do que consegue acessar e, principalmente, do que consegue praticar com consistência.
