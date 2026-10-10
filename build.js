@@ -2,7 +2,8 @@
 //  - copia os arquivos estáticos (index.html, css, js, assets, admin, uploads)
 //  - transforma cada content/artigos/*.md numa página em /artigos/<slug>/
 //  - cria a lista /artigos/ e preenche a seção de artigos da home
-//  - mostra a agenda (content/agenda.json) no topo da home, no curso e nos artigos
+//  - embute a agenda (content/eventos + content/agenda.json) nas páginas; o js/agenda.js
+//    mostra só as datas futuras, então datas passadas somem sozinhas, sem novo deploy
 // Roda no Netlify a cada publicação (npm run build).
 
 const fs = require('fs');
@@ -14,9 +15,10 @@ const ROOT = __dirname;
 const OUT = path.join(ROOT, '_site');
 const ARTICLES_DIR = path.join(ROOT, 'content', 'artigos');
 const AGENDA_FILE = path.join(ROOT, 'content', 'agenda.json');
+const EVENTS_DIR = path.join(ROOT, 'content', 'eventos');
 const STATIC = ['css', 'js', 'assets', 'admin', 'uploads'];
 const HOME_CARDS = 3;
-const WHATSAPP = 'https://wa.me/55';
+const WHATSAPP = 'https://wa.me/5517991014053';
 const INSTAGRAM = 'https://www.instagram.com/coachingrowth/';
 
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -76,14 +78,26 @@ function loadArticles() {
     .sort((a, b) => (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0));
 }
 
-// Agenda editada no painel. O próximo curso some sozinho depois da data "ate".
+// Agenda editada no painel: um arquivo por evento + lista "sob consulta".
 function loadAgenda() {
+  const day = (v) => (v instanceof Date ? v.toISOString().slice(0, 10) : String(v || '').slice(0, 10));
+  const events = fs.existsSync(EVENTS_DIR) ? fs.readdirSync(EVENTS_DIR)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(fs.readFileSync(path.join(EVENTS_DIR, f), 'utf8')))
+    .filter((e) => e && e.titulo && e.inicio)
+    .map((e) => ({
+      tipo: e.tipo || '', titulo: e.titulo, inicio: day(e.inicio), fim: day(e.fim || e.inicio),
+      local: e.local || '', obs: e.obs || '', link: e.link || '',
+    }))
+    .sort((a, b) => a.inicio.localeCompare(b.inicio)) : [];
   const raw = fs.existsSync(AGENDA_FILE) ? JSON.parse(fs.readFileSync(AGENDA_FILE, 'utf8')) : {};
-  let next = raw.proximo_curso && raw.proximo_curso.datas ? raw.proximo_curso : null;
-  const until = next && toDate(next.ate);
-  if (until && until.getTime() + 24 * 3600 * 1000 < Date.now()) next = null;
-  const others = (raw.outros || []).filter((o) => o && o.nome);
-  return { next, others };
+  const others = (raw.outros || []).filter((o) => o && o.nome).map((o) => ({ nome: o.nome, info: o.info || 'Sob consulta' }));
+  return { events, others, whatsapp: WHATSAPP };
+}
+
+function agendaScripts(agenda) {
+  const json = JSON.stringify(agenda).replace(/</g, '\\u003c');
+  return `<script>window.CG_AGENDA=${json};</script>\n<script src="/js/agenda.js"></script>\n`;
 }
 
 // ── Shared pieces ────────────────────────────────────────────────────────────
@@ -113,6 +127,7 @@ const NAV = `<nav class="cg-nav is-visible">
     <div class="cg-nav-links" style="display:flex;gap:20px;align-items:center;justify-content:flex-end">
       <a class="cg-navlink" href="/#services">Serviços</a>
       <a class="cg-navlink" href="/#course">Curso</a>
+      <a class="cg-navlink" href="/agenda/">Agenda</a>
       <a class="cg-navlink" href="/#time">Time</a>
       <a class="cg-navlink" href="/artigos/">Artigos</a>
       <a class="cg-btn cg-btn--sm" href="${WHATSAPP}" target="_blank" rel="noopener">WhatsApp</a>
@@ -196,47 +211,12 @@ function galleryBlock(a) {
   </section>`;
 }
 
-// Faixa curta logo abaixo do título (só no celular) apontando para a agenda.
-function agendaStrip(agenda) {
-  if (!agenda.next) return '';
-  return `<a class="cg-astrip" href="#agenda">
-    <span class="cg-astrip-k">Próxima turma</span>
-    <span class="cg-astrip-v">${esc(agenda.next.datas)}</span>
-    <span class="cg-astrip-go">Ver agenda ↓</span>
-  </a>`;
-}
-
-// Agenda ao lado do texto (computador) ou no fim do artigo (celular).
-function agendaAside(agenda) {
-  if (!agenda.next && !agenda.others.length) return '';
-  const n = agenda.next;
-  return `<aside class="cg-agenda" id="agenda">
-    <div class="cg-agenda-card">
-      <span class="cg-agenda-k">${n ? 'Próxima turma' : 'Curso de Desenvolvimento'}</span>
-      ${n ? `<div class="cg-agenda-title">${esc(n.titulo || 'Curso de Desenvolvimento para Treinadores')}</div>
-      <div class="cg-agenda-date">${esc(n.datas)}</div>
-      ${n.local ? `<div class="cg-agenda-local">${esc(n.local)}</div>` : ''}
-      <a class="cg-btn cg-agenda-btn" href="${WHATSAPP}" target="_blank" rel="noopener">Quero me inscrever</a>`
-      : `<p class="cg-agenda-soon">Novas datas em breve. Chama no WhatsApp para entrar na lista.</p>
-      <a class="cg-btn cg-agenda-btn" href="${WHATSAPP}" target="_blank" rel="noopener">Falar no WhatsApp</a>`}
-    </div>
-    ${agenda.others.length ? `<div class="cg-agenda-others">
-      <span class="cg-agenda-k cg-agenda-k--dark">Outras formações</span>
-      <ul>
-        ${agenda.others.map((o) => `<li><span>${esc(o.nome)}</span><em>${esc(o.info || 'Sob consulta')}</em></li>`).join('\n        ')}
-      </ul>
-      <a class="cg-agenda-link" href="/#services">Ver todos os serviços →</a>
-    </div>` : ''}
-  </aside>`;
-}
-
-// Novidades no topo da home: próximo curso + artigo mais recente.
-function homeNews(agenda, articles) {
-  const items = [];
-  if (agenda.next) items.push(`<a class="cg-news-item" href="#course"><span class="cg-news-k">Próxima turma</span><span class="cg-news-v">${esc(agenda.next.datas)}</span></a>`);
-  if (articles[0]) items.push(`<a class="cg-news-item" href="${articles[0].url}"><span class="cg-news-k">Artigo novo</span><span class="cg-news-v">${esc(articles[0].title)}</span></a>`);
-  if (!items.length) return '<!-- NOVIDADES -->';
-  return `<div class="cg-news">${items.join('')}</div>`;
+// Novidades no topo da home: próxima data (preenchida pelo js/agenda.js) + artigo mais recente.
+function homeNews(articles) {
+  const art = articles[0]
+    ? `<a class="cg-news-item" href="${articles[0].url}"><span class="cg-news-k">Artigo novo</span><span class="cg-news-v">${esc(articles[0].title)}</span></a>`
+    : '';
+  return `<div class="cg-news"><span data-agenda="news"></span>${art}</div>`;
 }
 
 function articlePage(a, all, agenda) {
@@ -253,7 +233,7 @@ function articlePage(a, all, agenda) {
       <div class="cg-ameta">${meta}</div>
     </div>
   </header>
-  ${agendaStrip(agenda)}
+  <div data-agenda="strip"></div>
   <div class="cg-wrap cg-alayout">
     <div class="cg-amain">
       <article class="cg-prose">
@@ -262,7 +242,7 @@ function articlePage(a, all, agenda) {
       ${galleryBlock(a)}
       ${pdfBlock(a)}
     </div>
-    ${agendaAside(agenda)}
+    <aside class="cg-agenda" id="agenda" data-agenda="aside"></aside>
   </div>
   ${others.length ? `<section class="cg-more">
     <div class="cg-wrap">
@@ -271,7 +251,7 @@ function articlePage(a, all, agenda) {
     </div>
   </section>` : ''}
 </main>
-` + FOOTER + `<script src="/js/article.js"></script>
+` + FOOTER + agendaScripts(agenda) + `<script src="/js/article.js"></script>
 </body>
 </html>
 `;
@@ -294,6 +274,25 @@ function listPage(all) {
   </section>
 </main>
 ` + FOOTER + `</body>
+</html>
+`;
+}
+
+function agendaPage(agenda) {
+  return HEAD('Agenda · Coaching Growth', 'Próximas turmas do Curso de Desenvolvimento para Treinadores, clínicas e outras formações da Coaching Growth.') + NAV + `
+<main>
+  <header class="cg-ahero">
+    <div class="cg-wrap cg-ahead">
+      <span class="cg-kicker">Agenda</span>
+      <h1>Próximas<br>datas.</h1>
+      <p class="cg-lede">Cursos, clínicas e formações da Coaching Growth. As vagas são confirmadas pelo WhatsApp.</p>
+    </div>
+  </header>
+  <section class="cg-list">
+    <div class="cg-wrap" data-agenda="page"></div>
+  </section>
+</main>
+` + FOOTER + agendaScripts(agenda) + `</body>
 </html>
 `;
 }
@@ -331,16 +330,13 @@ home = home.replace('<link rel="stylesheet" href="css/site.css">', '<link rel="s
 if (articles.length) {
   home = home.replace(/<!-- ARTIGOS:START[\s\S]*?<!-- ARTIGOS:END -->/, homeCards(articles));
 }
-home = home.replace(/<!-- NOVIDADES:START[\s\S]*?<!-- NOVIDADES:END -->/, homeNews(agenda, articles));
-if (agenda.next) {
-  home = home.replace(/<!-- TURMA:START[\s\S]*?<!-- TURMA:END -->/,
-    `<div style="font-family:'Anton',sans-serif;font-size:30px;line-height:1.05;text-transform:uppercase;color:#fff;margin:0 0 8px">${esc(agenda.next.datas)}</div>` +
-    (agenda.next.local ? `<div style="font-size:15px;color:#dcdcdc;margin:0 0 10px">${esc(agenda.next.local)}</div>` : '') +
-    `<p style="font-size:17px;color:#b3b3b3;line-height:1.7;margin:0 0 14px">Chama no WhatsApp para garantir sua vaga — grupos têm desconto.</p>`);
-}
+home = home.replace(/<!-- NOVIDADES:START[\s\S]*?<!-- NOVIDADES:END -->/, homeNews(articles));
+home = home.replace(/<!-- TURMA:START[^>]*-->([\s\S]*?)<!-- TURMA:END -->/, '<div data-agenda="course">$1</div>');
+home = home.replace('</body>', agendaScripts(agenda) + '</body>');
 write('index.html', home);
 
 write('artigos/index.html', listPage(articles));
+write('agenda/index.html', agendaPage(agenda));
 for (const a of articles) write(`artigos/${a.slug}/index.html`, articlePage(a, articles, agenda));
 
 console.log(`Site gerado em _site/ com ${articles.length} artigo(s).`);
