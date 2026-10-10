@@ -40,7 +40,7 @@
       sub: 'Coach de CrossFit',
       line: 'A trilha de quem quer entregar um coaching de mais qualidade — da formação completa ao acompanhamento individual.',
       steps: [
-        { n: '01', title: 'Curso de Desenvolvimento', desc: 'Formação completa para treinadores que querem evoluir na prática, aprofundando conhecimentos técnicos, didáticos e profissionais para entregar um coaching de maior qualidade.', cta: 'Ver próxima turma', href: '#course' },
+        { n: '01', title: 'Curso de Desenvolvimento', desc: 'Formação completa para treinadores que querem evoluir na prática, aprofundando conhecimentos técnicos, didáticos e profissionais para entregar um coaching de maior qualidade.', cta: 'Ver próximo curso', href: '#course' },
         { n: '02', title: 'Grupo de Estudos', desc: 'Um espaço de aprendizado contínuo, troca de experiências e discussão de temas relevantes para quem quer estudar, se atualizar e evoluir junto com outros treinadores.', cta: 'Entrar na lista', href: '#contact' },
         { n: '03', title: 'Mentoria Individual', desc: 'Acompanhamento personalizado para desenvolver os pontos que mais impactam sua atuação como treinador, com direcionamento de acordo com seus objetivos, desafios e momento profissional.', cta: 'Falar sobre mentoria', href: '#contact' }
       ]

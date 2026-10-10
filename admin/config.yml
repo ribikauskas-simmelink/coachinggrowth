@@ -70,27 +70,44 @@ collections:
           - { name: description, label: Descrição curta, widget: text, required: false }
           - { name: require_phone, label: Pedir telefone antes do download, widget: boolean, default: true }
 
-  - name: agenda
+  - name: eventos
     label: Agenda
-    description: Datas que aparecem no topo da home, na seção do curso e ao lado de todos os artigos.
+    label_singular: Evento
+    description: 'Cursos, clínicas e outras datas. Aparecem em /agenda, no topo da home e ao lado dos artigos. Depois que a data passa, o evento some sozinho do site.'
+    folder: content/eventos
+    create: true
+    extension: json
+    format: json
+    identifier_field: titulo
+    slug: '{{fields.inicio}}-{{slug}}'
+    summary: '{{fields.inicio | date("DD/MM/YYYY")}} · {{fields.titulo}}'
+    sortable_fields: ['inicio', 'titulo', 'tipo']
+    fields:
+      - name: tipo
+        label: Tipo
+        widget: select
+        default: Curso de Desenvolvimento
+        options: [Curso de Desenvolvimento, Clínica de Ginástica, Clínica de LPO, Clínica de Corrida, Grupo de Estudos, Workshop, Outro]
+      - { name: titulo, label: Nome do evento, widget: string, hint: 'Ex.: Curso de Desenvolvimento para Treinadores' }
+      - { name: inicio, label: Primeiro dia, widget: datetime, date_format: 'DD/MM/YYYY', time_format: false, format: 'YYYY-MM-DD' }
+      - { name: fim, label: Último dia, widget: datetime, date_format: 'DD/MM/YYYY', time_format: false, format: 'YYYY-MM-DD', required: false, hint: 'Deixe vazio se for um dia só.' }
+      - { name: local, label: Local (cidade e/ou box), widget: string, required: false, hint: 'Ex.: São José do Rio Preto (SP) ou CrossFit Rio Preto · São José do Rio Preto (SP)' }
+      - { name: obs, label: Observação, widget: text, required: false, hint: 'Opcional. Ex.: vagas limitadas, valor, horário.' }
+      - { name: link, label: Link de inscrição, widget: string, required: false, hint: 'Opcional. Se vazio, o botão abre o WhatsApp já com o nome e a data do evento.' }
+
+  - name: configuracoes
+    label: Formações sob consulta
     files:
       - name: agenda
-        label: Próximas datas
+        label: Lista "sob consulta"
         file: content/agenda.json
+        description: Formações sem data fixa. Aparecem na página /agenda e ao lado dos artigos.
         fields:
-          - name: proximo_curso
-            label: Próxima turma do Curso de Desenvolvimento
-            widget: object
-            fields:
-              - { name: titulo, label: Nome do curso, widget: string, default: Curso de Desenvolvimento para Treinadores }
-              - { name: datas, label: Datas (como devem aparecer), widget: string, required: false, hint: 'Ex.: 21 e 22 de novembro. Deixe vazio se ainda não houver data.' }
-              - { name: ate, label: Último dia do curso, widget: datetime, date_format: 'DD/MM/YYYY', time_format: false, format: 'YYYY-MM-DD', required: false, hint: 'Depois desse dia a data some sozinha do site (na próxima publicação).' }
-              - { name: local, label: Local, widget: string, required: false, hint: 'Ex.: CrossFit Rio Preto, São José do Rio Preto (SP)' }
           - name: outros
-            label: Outras formações e clínicas
+            label: Formações
             label_singular: formação
             widget: list
             summary: '{{fields.nome}} · {{fields.info}}'
             fields:
               - { name: nome, label: Nome, widget: string }
-              - { name: info, label: Data ou situação, widget: string, default: Sob consulta }
+              - { name: info, label: Situação, widget: string, default: Sob consulta }
