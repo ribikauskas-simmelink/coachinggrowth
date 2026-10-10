@@ -1,0 +1,16 @@
+{
+  "proximo_curso": {
+    "titulo": "Curso de Desenvolvimento para Treinadores",
+    "datas": "21 e 22 de novembro",
+    "ate": "2026-11-22",
+    "local": ""
+  },
+  "outros": [
+    { "nome": "Clínicas de Ginástica", "info": "Sob consulta" },
+    { "nome": "Clínicas de LPO e Corrida", "info": "Sob consulta" },
+    { "nome": "Grupo de Estudos", "info": "Sob consulta" },
+    { "nome": "Mentoria Individual", "info": "Sob consulta" },
+    { "nome": "Mentoria para Equipe", "info": "Sob consulta" },
+    { "nome": "Curso ou clínica no seu box", "info": "Sob consulta" }
+  ]
+}

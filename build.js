@@ -1,7 +1,8 @@
 // Gera o site final em _site/:
 //  - copia os arquivos estáticos (index.html, css, js, assets, admin, uploads)
 //  - transforma cada content/artigos/*.md numa página em /artigos/<slug>/
-//  - cria a lista /artigos/ e preenche a seção "Conteúdo" da home
+//  - cria a lista /artigos/ e preenche a seção de artigos da home
+//  - mostra a agenda (content/agenda.json) no topo da home, no curso e nos artigos
 // Roda no Netlify a cada publicação (npm run build).
 
 const fs = require('fs');
@@ -12,6 +13,7 @@ const { marked } = require('marked');
 const ROOT = __dirname;
 const OUT = path.join(ROOT, '_site');
 const ARTICLES_DIR = path.join(ROOT, 'content', 'artigos');
+const AGENDA_FILE = path.join(ROOT, 'content', 'agenda.json');
 const STATIC = ['css', 'js', 'assets', 'admin', 'uploads'];
 const HOME_CARDS = 3;
 const WHATSAPP = 'https://wa.me/55';
@@ -74,6 +76,16 @@ function loadArticles() {
     .sort((a, b) => (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0));
 }
 
+// Agenda editada no painel. O próximo curso some sozinho depois da data "ate".
+function loadAgenda() {
+  const raw = fs.existsSync(AGENDA_FILE) ? JSON.parse(fs.readFileSync(AGENDA_FILE, 'utf8')) : {};
+  let next = raw.proximo_curso && raw.proximo_curso.datas ? raw.proximo_curso : null;
+  const until = next && toDate(next.ate);
+  if (until && until.getTime() + 24 * 3600 * 1000 < Date.now()) next = null;
+  const others = (raw.outros || []).filter((o) => o && o.nome);
+  return { next, others };
+}
+
 // ── Shared pieces ────────────────────────────────────────────────────────────
 
 const HEAD = (title, description, image) => `<!DOCTYPE html>
@@ -122,7 +134,7 @@ const FOOTER = `<section class="cg-cta">
 <footer class="cg-footer">
   <div class="cg-wrap">
     <img src="/assets/logo-cg-white-opt.png" alt="Coaching Growth" style="width:180px;height:auto;display:block">
-    <span>© ${new Date().getFullYear()} Coaching Growth · Henrique Scomparim</span>
+    <span>© ${new Date().getFullYear()} Coaching Growth · Henrique Scomparin</span>
   </div>
 </footer>
 `;
@@ -184,13 +196,56 @@ function galleryBlock(a) {
   </section>`;
 }
 
-function articlePage(a, all) {
+// Faixa curta logo abaixo do título (só no celular) apontando para a agenda.
+function agendaStrip(agenda) {
+  if (!agenda.next) return '';
+  return `<a class="cg-astrip" href="#agenda">
+    <span class="cg-astrip-k">Próxima turma</span>
+    <span class="cg-astrip-v">${esc(agenda.next.datas)}</span>
+    <span class="cg-astrip-go">Ver agenda ↓</span>
+  </a>`;
+}
+
+// Agenda ao lado do texto (computador) ou no fim do artigo (celular).
+function agendaAside(agenda) {
+  if (!agenda.next && !agenda.others.length) return '';
+  const n = agenda.next;
+  return `<aside class="cg-agenda" id="agenda">
+    <div class="cg-agenda-card">
+      <span class="cg-agenda-k">${n ? 'Próxima turma' : 'Curso de Desenvolvimento'}</span>
+      ${n ? `<div class="cg-agenda-title">${esc(n.titulo || 'Curso de Desenvolvimento para Treinadores')}</div>
+      <div class="cg-agenda-date">${esc(n.datas)}</div>
+      ${n.local ? `<div class="cg-agenda-local">${esc(n.local)}</div>` : ''}
+      <a class="cg-btn cg-agenda-btn" href="${WHATSAPP}" target="_blank" rel="noopener">Quero me inscrever</a>`
+      : `<p class="cg-agenda-soon">Novas datas em breve. Chama no WhatsApp para entrar na lista.</p>
+      <a class="cg-btn cg-agenda-btn" href="${WHATSAPP}" target="_blank" rel="noopener">Falar no WhatsApp</a>`}
+    </div>
+    ${agenda.others.length ? `<div class="cg-agenda-others">
+      <span class="cg-agenda-k cg-agenda-k--dark">Outras formações</span>
+      <ul>
+        ${agenda.others.map((o) => `<li><span>${esc(o.nome)}</span><em>${esc(o.info || 'Sob consulta')}</em></li>`).join('\n        ')}
+      </ul>
+      <a class="cg-agenda-link" href="/#services">Ver todos os serviços →</a>
+    </div>` : ''}
+  </aside>`;
+}
+
+// Novidades no topo da home: próximo curso + artigo mais recente.
+function homeNews(agenda, articles) {
+  const items = [];
+  if (agenda.next) items.push(`<a class="cg-news-item" href="#course"><span class="cg-news-k">Próxima turma</span><span class="cg-news-v">${esc(agenda.next.datas)}</span></a>`);
+  if (articles[0]) items.push(`<a class="cg-news-item" href="${articles[0].url}"><span class="cg-news-k">Artigo novo</span><span class="cg-news-v">${esc(articles[0].title)}</span></a>`);
+  if (!items.length) return '<!-- NOVIDADES -->';
+  return `<div class="cg-news">${items.join('')}</div>`;
+}
+
+function articlePage(a, all, agenda) {
   const others = all.filter((o) => o.slug !== a.slug).slice(0, 3);
   const meta = [a.author, formatDate(a.date), `${a.minutes} min de leitura`].filter(Boolean).map(esc).join(' · ');
   return HEAD(`${a.title} · Coaching Growth`, a.summary || a.title, a.cover) + NAV + `
 <main>
   <header class="cg-ahero">
-    <div class="cg-wrap cg-narrow">
+    <div class="cg-wrap cg-ahead">
       <a class="cg-back" href="/artigos/">← Todos os artigos</a>
       ${a.category ? `<span class="cg-tag cg-tag--dark">${esc(a.category)}</span>` : ''}
       <h1>${esc(a.title)}</h1>
@@ -198,13 +253,16 @@ function articlePage(a, all) {
       <div class="cg-ameta">${meta}</div>
     </div>
   </header>
-  ${a.cover ? `<div class="cg-wrap cg-cover"><img src="${esc(a.cover)}" alt=""></div>` : ''}
-  <article class="cg-wrap cg-narrow cg-prose">
-    ${a.html}
-  </article>
-  <div class="cg-wrap cg-narrow">
-    ${galleryBlock(a)}
-    ${pdfBlock(a)}
+  ${agendaStrip(agenda)}
+  <div class="cg-wrap cg-alayout">
+    <div class="cg-amain">
+      <article class="cg-prose">
+        ${a.html}
+      </article>
+      ${galleryBlock(a)}
+      ${pdfBlock(a)}
+    </div>
+    ${agendaAside(agenda)}
   </div>
   ${others.length ? `<section class="cg-more">
     <div class="cg-wrap">
@@ -266,15 +324,23 @@ for (const dir of STATIC) {
 }
 
 const articles = loadArticles();
+const agenda = loadAgenda();
 
 let home = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 home = home.replace('<link rel="stylesheet" href="css/site.css">', '<link rel="stylesheet" href="css/site.css">\n<link rel="stylesheet" href="css/article.css">');
 if (articles.length) {
   home = home.replace(/<!-- ARTIGOS:START[\s\S]*?<!-- ARTIGOS:END -->/, homeCards(articles));
 }
+home = home.replace(/<!-- NOVIDADES:START[\s\S]*?<!-- NOVIDADES:END -->/, homeNews(agenda, articles));
+if (agenda.next) {
+  home = home.replace(/<!-- TURMA:START[\s\S]*?<!-- TURMA:END -->/,
+    `<div style="font-family:'Anton',sans-serif;font-size:30px;line-height:1.05;text-transform:uppercase;color:#fff;margin:0 0 8px">${esc(agenda.next.datas)}</div>` +
+    (agenda.next.local ? `<div style="font-size:15px;color:#dcdcdc;margin:0 0 10px">${esc(agenda.next.local)}</div>` : '') +
+    `<p style="font-size:17px;color:#b3b3b3;line-height:1.7;margin:0 0 14px">Chama no WhatsApp para garantir sua vaga — grupos têm desconto.</p>`);
+}
 write('index.html', home);
 
 write('artigos/index.html', listPage(articles));
-for (const a of articles) write(`artigos/${a.slug}/index.html`, articlePage(a, articles));
+for (const a of articles) write(`artigos/${a.slug}/index.html`, articlePage(a, articles, agenda));
 
 console.log(`Site gerado em _site/ com ${articles.length} artigo(s).`);
