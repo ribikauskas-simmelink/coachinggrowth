@@ -91,7 +91,7 @@
     txt.appendChild(el('div', 'cg-persona-sub', p.sub));
     row.appendChild(txt);
     b.appendChild(row);
-    b.addEventListener('click', function () { select(i); });
+    b.addEventListener('click', function () { select(i); if (window.cgTrack) window.cgTrack('Perfil', { perfil: p.key }); });
     tabsEl.appendChild(b);
     return b;
   });
