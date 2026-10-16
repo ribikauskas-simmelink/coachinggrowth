@@ -17,9 +17,11 @@ document.querySelectorAll('.cg-pdf-form').forEach(function (form) {
     btn.textContent = 'Liberando…';
 
     function release() {
+      if (window.cgTrack) window.cgTrack('Download PDF', { artigo: form.artigo.value, com_telefone: 'sim' });
       var a = document.createElement('a');
       a.href = form.getAttribute('data-pdf');
       a.download = '';
+      a.setAttribute('data-no-track', '');
       document.body.appendChild(a);
       a.click();
       a.remove();

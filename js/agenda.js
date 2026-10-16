@@ -89,7 +89,7 @@
         '<div class="cg-agenda-title">' + esc(first.titulo) + '</div>' +
         '<div class="cg-agenda-date">' + esc(datesText(first)) + '</div>' +
         placeHtml(first, 'cg-agenda-local') +
-        '<a class="cg-btn cg-agenda-btn" href="' + esc(signupUrl(first)) + '" target="_blank" rel="noopener">Quero me inscrever</a>';
+        '<a class="cg-btn cg-agenda-btn" href="' + esc(signupUrl(first)) + '" data-track="Inscrição" data-track-evento="' + esc(first.titulo + ' · ' + first.inicio) + '" target="_blank" rel="noopener">Quero me inscrever</a>';
     } else {
       html += '<span class="cg-agenda-k">Curso de Desenvolvimento</span><p class="cg-agenda-soon">Novas datas em breve. Chama no WhatsApp para entrar na lista.</p>' +
         '<a class="cg-btn cg-agenda-btn" href="' + contactUrl('Olá! Quero entrar na lista do próximo Curso de Desenvolvimento.') + '" target="_blank" rel="noopener">Falar no WhatsApp</a>';
@@ -121,7 +121,7 @@
             placeHtml(e, 'cg-event-local') +
             (e.obs ? '<p>' + esc(e.obs) + '</p>' : '') +
           '</div>' +
-          '<a class="cg-btn cg-event-btn" href="' + esc(signupUrl(e)) + '" target="_blank" rel="noopener">Quero participar</a>' +
+          '<a class="cg-btn cg-event-btn" href="' + esc(signupUrl(e)) + '" data-track="Inscrição" data-track-evento="' + esc(e.titulo + ' · ' + e.inicio) + '" target="_blank" rel="noopener">Quero participar</a>' +
         '</article>';
       }).join('') + '</div>';
     } else {

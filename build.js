@@ -117,6 +117,8 @@ ${image ? `<meta property="og:image" content="${esc(image)}">\n` : ''}<link rel=
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/site.css">
 <link rel="stylesheet" href="/css/article.css">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="52701088-7bbc-41ad-9cfc-3c4c7a1f2e22"></script>
+<script src="/js/track.js"></script>
 </head>
 <body class="cg-page">
 `;
